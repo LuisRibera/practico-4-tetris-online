@@ -13,15 +13,21 @@ import javax.inject.Singleton
 class SocketManager @Inject constructor() {
 
     private var socket: Socket? = null
+    private var urlActual: String? = null
 
     private val _eventos = MutableSharedFlow<EventoSocket>(extraBufferCapacity = 32)
     val eventos: SharedFlow<EventoSocket> = _eventos.asSharedFlow()
 
     fun conectar(url: String) {
-        if (socket?.connected() == true) return
+        val normalizada = url.trim()
+        if (socket?.connected() == true && urlActual == normalizada) return
+        if (socket != null) {
+            desconectar()
+        }
         val nuevoSocket = IO.socket(url)
         registrarEventos(nuevoSocket)
         socket = nuevoSocket
+        urlActual = normalizada
         nuevoSocket.connect()
     }
 
@@ -31,6 +37,11 @@ class SocketManager @Inject constructor() {
         }
         socket.on(Socket.EVENT_DISCONNECT) {
             _eventos.tryEmit(EventoSocket.Desconectado)
+        }
+        socket.on(Socket.EVENT_CONNECT_ERROR) { args ->
+            val mensaje = args.firstOrNull()?.toString()?.takeIf { it.isNotBlank() }
+                ?: "No se pudo conectar al servidor"
+            _eventos.tryEmit(EventoSocket.Error(mensaje))
         }
         socket.on("room_created") { args ->
             val datos = args[0] as JSONObject
@@ -74,9 +85,13 @@ class SocketManager @Inject constructor() {
         socket?.emit("game_over", JSONObject().put("roomId", codigo))
     }
 
+    fun estaConectado(url: String): Boolean =
+        socket?.connected() == true && urlActual == url.trim()
+
     fun desconectar() {
         socket?.disconnect()
         socket?.off()
         socket = null
+        urlActual = null
     }
 }

@@ -17,8 +17,14 @@ class SalaViewModel @Inject constructor(
     private val repositorio: JuegoRepository
 ) : ViewModel() {
 
+    private enum class AccionPendiente {
+        CREAR_SALA,
+        UNIRSE_SALA
+    }
+
     private val _estado = MutableStateFlow(EstadoSala())
     val estado: StateFlow<EstadoSala> = _estado.asStateFlow()
+    private var accionPendiente: AccionPendiente? = null
 
     init {
         escucharEventos()
@@ -27,26 +33,43 @@ class SalaViewModel @Inject constructor(
     private fun escucharEventos() = viewModelScope.launch {
         repositorio.eventos.collect { evento ->
             when (evento) {
-                is EventoSocket.Conectado ->
-                    _estado.value = _estado.value.copy(conectado = true, mensaje = null)
+                is EventoSocket.Conectado -> {
+                    _estado.value = _estado.value.copy(
+                        conectado = true,
+                        conectando = false,
+                        mensaje = null
+                    )
+                    ejecutarAccionPendiente()
+                }
 
                 is EventoSocket.Desconectado ->
-                    _estado.value = _estado.value.copy(conectado = false)
+                    _estado.value = _estado.value.copy(
+                        conectado = false,
+                        conectando = false
+                    )
 
                 is EventoSocket.SalaCreada ->
                     _estado.value = _estado.value.copy(
                         codigoSala = evento.codigo,
-                        esperandoOponente = true
+                        esperandoOponente = true,
+                        mensaje = "Sala creada: ${evento.codigo}"
                     )
 
                 is EventoSocket.PartidaIniciada ->
                     _estado.value = _estado.value.copy(
                         partidaIniciada = true,
+                        esperandoOponente = false,
                         codigoSala = _estado.value.codigoSala ?: _estado.value.codigoIngresado
                     )
 
-                is EventoSocket.Error ->
-                    _estado.value = _estado.value.copy(mensaje = evento.mensaje)
+                is EventoSocket.Error -> {
+                    accionPendiente = null
+                    _estado.value = _estado.value.copy(
+                        conectando = false,
+                        esperandoOponente = false,
+                        mensaje = evento.mensaje
+                    )
+                }
 
                 else -> Unit
             }
@@ -54,24 +77,80 @@ class SalaViewModel @Inject constructor(
     }
 
     fun cambiarUrl(valor: String) {
-        _estado.value = _estado.value.copy(url = valor)
+        _estado.value = _estado.value.copy(
+            url = valor,
+            conectado = false,
+            conectando = false,
+            mensaje = null
+        )
     }
 
     fun cambiarCodigo(valor: String) {
-        _estado.value = _estado.value.copy(codigoIngresado = valor.uppercase())
+        _estado.value = _estado.value.copy(
+            codigoIngresado = valor.uppercase(),
+            mensaje = null
+        )
     }
 
     fun conectar() {
-        repositorio.conectar(_estado.value.url.trim())
+        val url = _estado.value.url.trim()
+        if (url.isBlank()) {
+            _estado.value = _estado.value.copy(mensaje = "Ingresa una URL valida")
+            accionPendiente = null
+            return
+        }
+        if (repositorio.estaConectado(url)) {
+            _estado.value = _estado.value.copy(
+                conectado = true,
+                conectando = false,
+                mensaje = null
+            )
+            ejecutarAccionPendiente()
+            return
+        }
+        _estado.value = _estado.value.copy(
+            conectado = false,
+            conectando = true,
+            mensaje = null
+        )
+        repositorio.conectar(url)
     }
 
     fun crearSala() {
+        accionPendiente = AccionPendiente.CREAR_SALA
         conectar()
-        repositorio.crearSala()
     }
 
     fun unirseSala() {
+        val codigo = _estado.value.codigoIngresado.trim()
+        if (codigo.isBlank()) {
+            _estado.value = _estado.value.copy(mensaje = "Ingresa un codigo de sala")
+            accionPendiente = null
+            return
+        }
+        accionPendiente = AccionPendiente.UNIRSE_SALA
         conectar()
-        repositorio.unirseSala(_estado.value.codigoIngresado.trim())
+    }
+
+    private fun ejecutarAccionPendiente() {
+        when (accionPendiente) {
+            AccionPendiente.CREAR_SALA -> {
+                accionPendiente = null
+                repositorio.crearSala()
+            }
+
+            AccionPendiente.UNIRSE_SALA -> {
+                val codigo = _estado.value.codigoIngresado.trim()
+                if (codigo.isBlank()) {
+                    accionPendiente = null
+                    _estado.value = _estado.value.copy(mensaje = "Ingresa un codigo de sala")
+                } else {
+                    accionPendiente = null
+                    repositorio.unirseSala(codigo)
+                }
+            }
+
+            null -> Unit
+        }
     }
 }

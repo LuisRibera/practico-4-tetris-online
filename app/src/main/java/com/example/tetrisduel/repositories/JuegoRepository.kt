@@ -19,5 +19,7 @@ class JuegoRepository(private val socketManager: SocketManager) {
 
     fun notificarDerrota(codigo: String) = socketManager.notificarDerrota(codigo)
 
+    fun estaConectado(url: String) = socketManager.estaConectado(url)
+
     fun desconectar() = socketManager.desconectar()
 }

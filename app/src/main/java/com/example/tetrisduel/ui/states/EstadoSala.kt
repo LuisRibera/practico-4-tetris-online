@@ -5,6 +5,7 @@ data class EstadoSala(
     val codigoIngresado: String = "",
     val codigoSala: String? = null,
     val conectado: Boolean = false,
+    val conectando: Boolean = false,
     val esperandoOponente: Boolean = false,
     val partidaIniciada: Boolean = false,
     val mensaje: String? = null

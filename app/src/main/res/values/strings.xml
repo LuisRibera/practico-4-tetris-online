@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Tetris Duel</string>
+    <string name="titulo_sala">Sala</string>
+    <string name="etiqueta_url_servidor">URL del servidor</string>
+    <string name="etiqueta_codigo_sala">Codigo de sala</string>
+    <string name="accion_conectar">Conectar</string>
+    <string name="accion_crear_sala">Crear sala</string>
+    <string name="accion_unirse_sala">Unirse a sala</string>
+    <string name="estado_conectado">Conectado</string>
+    <string name="estado_desconectado">Desconectado</string>
+    <string name="estado_conectando">Conectando…</string>
+    <string name="estado_esperando">Esperando oponente…</string>
+    <string name="titulo_juego">Juego</string>
+    <string name="texto_juego_placeholder">La partida ya puede continuar desde esta ruta.</string>
 </resources>
