@@ -8,8 +8,24 @@
     <string name="accion_unirse_sala">Unirse a sala</string>
     <string name="estado_conectado">Conectado</string>
     <string name="estado_desconectado">Desconectado</string>
-    <string name="estado_conectando">Conectando…</string>
-    <string name="estado_esperando">Esperando oponente…</string>
+    <string name="estado_conectando">Conectando...</string>
+    <string name="estado_esperando">Esperando oponente...</string>
     <string name="titulo_juego">Juego</string>
-    <string name="texto_juego_placeholder">La partida ya puede continuar desde esta ruta.</string>
+    <string name="etiqueta_puntaje">Puntaje</string>
+    <string name="etiqueta_lineas">Lineas</string>
+    <string name="etiqueta_sala">Sala</string>
+    <string name="etiqueta_conexion">Conexion</string>
+    <string name="etiqueta_oponente">Oponente</string>
+    <string name="etiqueta_siguiente">Siguiente</string>
+    <string name="estado_listo">Listo</string>
+    <string name="estado_fuera">Fuera</string>
+    <string name="accion_izquierda">Izquierda</string>
+    <string name="accion_derecha">Derecha</string>
+    <string name="accion_rotar">Rotar</string>
+    <string name="accion_bajar">Bajar</string>
+    <string name="accion_caida">Caida</string>
+    <string name="aviso_lucky_37">LUCKY 37!</string>
+    <string name="texto_ganaste">Ganaste</string>
+    <string name="texto_perdiste">Perdiste</string>
+    <string name="resumen_partida">Puntaje: %1$d | Lineas: %2$d | Duracion: %3$ds</string>
 </resources>

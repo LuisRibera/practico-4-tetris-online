@@ -29,6 +29,7 @@ class JuegoViewModel @Inject constructor(
     private var codigo: String = ""
     private var inicioMs: Long = 0
     private var bucle: Job? = null
+    private var escuchaEventos: Job? = null
     private val velocidadCaida = 600L
 
     fun iniciar(codigoSala: String) {
@@ -40,7 +41,8 @@ class JuegoViewModel @Inject constructor(
             piezaActual = primera,
             siguiente = TipoPieza.aleatoria()
         )
-        escucharEventos()
+        escuchaEventos?.cancel()
+        escuchaEventos = escucharEventos()
         iniciarBucle()
     }
 
@@ -48,10 +50,25 @@ class JuegoViewModel @Inject constructor(
         repositorio.eventos.collect { evento ->
             when (evento) {
                 is EventoSocket.AtaqueRecibido -> recibirAtaque(evento.lineasBasura)
-                is EventoSocket.Victoria -> terminarPartida(gano = true)
-                is EventoSocket.OponenteDesconectado -> terminarPartida(gano = true)
+                is EventoSocket.Victoria -> terminarPartida(
+                    gano = true,
+                    mensaje = "Ganaste la partida"
+                )
+
+                is EventoSocket.OponenteDesconectado -> {
+                    _estado.value = _estado.value.copy(oponenteConectado = false)
+                    terminarPartida(
+                        gano = true,
+                        mensaje = "Tu oponente se desconecto"
+                    )
+                }
+
                 is EventoSocket.Desconectado ->
                     _estado.value = _estado.value.copy(conectado = false)
+
+                is EventoSocket.Conectado ->
+                    _estado.value = _estado.value.copy(conectado = true)
+
                 else -> Unit
             }
         }
@@ -97,7 +114,10 @@ class JuegoViewModel @Inject constructor(
                 lineas = _estado.value.lineas + eliminadas,
                 piezasColocadas = _estado.value.piezasColocadas + 1
             )
-            terminarPartida(gano = false)
+            terminarPartida(
+                gano = false,
+                mensaje = "Perdiste la partida"
+            )
             return
         }
 
@@ -120,13 +140,19 @@ class JuegoViewModel @Inject constructor(
 
     private fun recibirAtaque(cantidad: Int) {
         val tableroConBasura = MotorTetris.agregarBasura(_estado.value.tablero, cantidad)
-        var pieza = _estado.value.piezaActual
-        if (pieza != null) {
-            while (!MotorTetris.posicionValida(tableroConBasura, pieza!!) && pieza.fila > 0) {
+        val piezaActual = _estado.value.piezaActual
+        var piezaAjustada = piezaActual
+        if (piezaActual != null) {
+            var pieza: Pieza = piezaActual
+            while (!MotorTetris.posicionValida(tableroConBasura, pieza) && pieza.fila > 0) {
                 pieza = pieza.movida(-1, 0)
             }
+            piezaAjustada = pieza
         }
-        _estado.value = _estado.value.copy(tablero = tableroConBasura, piezaActual = pieza)
+        _estado.value = _estado.value.copy(
+            tablero = tableroConBasura,
+            piezaActual = piezaAjustada
+        )
     }
 
     fun moverIzquierda() = intentarMovimiento(0, -1)
@@ -160,7 +186,7 @@ class JuegoViewModel @Inject constructor(
         bloquear(abajo)
     }
 
-    private fun terminarPartida(gano: Boolean) {
+    private fun terminarPartida(gano: Boolean, mensaje: String) {
         if (_estado.value.terminado) return
         bucle?.cancel()
         if (!gano) repositorio.notificarDerrota(codigo)
@@ -168,12 +194,14 @@ class JuegoViewModel @Inject constructor(
         _estado.value = _estado.value.copy(
             terminado = true,
             gano = gano,
-            duracionSegundos = duracion
+            duracionSegundos = duracion,
+            mensajeFinal = mensaje
         )
     }
 
     override fun onCleared() {
         super.onCleared()
         bucle?.cancel()
+        escuchaEventos?.cancel()
     }
 }

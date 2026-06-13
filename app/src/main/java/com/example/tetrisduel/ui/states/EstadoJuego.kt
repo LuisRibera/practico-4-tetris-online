@@ -17,5 +17,6 @@ data class EstadoJuego(
     val terminado: Boolean = false,
     val gano: Boolean = false,
     val duracionSegundos: Int = 0,
-    val mostrarLucky37: Boolean = false
+    val mostrarLucky37: Boolean = false,
+    val mensajeFinal: String? = null
 )
