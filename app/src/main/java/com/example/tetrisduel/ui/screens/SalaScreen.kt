@@ -12,22 +12,22 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tetrisduel.R
-import com.example.tetrisduel.ui.viewmodels.SalaViewModel
+import com.example.tetrisduel.ui.states.EstadoSala
 
 @Composable
 fun SalaScreen(
+    estado: EstadoSala,
+    onCambiarUrl: (String) -> Unit,
+    onCambiarCodigo: (String) -> Unit,
+    onConectar: () -> Unit,
+    onCrearSala: () -> Unit,
+    onUnirseSala: () -> Unit,
     onIrAJuego: (String) -> Unit,
-    viewModel: SalaViewModel = hiltViewModel()
 ) {
-    val estado by viewModel.estado.collectAsState()
-
     LaunchedEffect(estado.partidaIniciada, estado.codigoSala) {
         val codigoSala = estado.codigoSala
         if (estado.partidaIniciada && !codigoSala.isNullOrBlank()) {
@@ -55,14 +55,14 @@ fun SalaScreen(
             ) {
                 OutlinedTextField(
                     value = estado.url,
-                    onValueChange = viewModel::cambiarUrl,
+                    onValueChange = onCambiarUrl,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.etiqueta_url_servidor)) },
                     singleLine = true
                 )
 
                 Button(
-                    onClick = viewModel::conectar,
+                    onClick = onConectar,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !estado.conectando
                 ) {
@@ -88,7 +88,7 @@ fun SalaScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = viewModel::crearSala,
+                    onClick = onCrearSala,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !estado.conectando
                 ) {
@@ -97,14 +97,14 @@ fun SalaScreen(
 
                 OutlinedTextField(
                     value = estado.codigoIngresado,
-                    onValueChange = viewModel::cambiarCodigo,
+                    onValueChange = onCambiarCodigo,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.etiqueta_codigo_sala)) },
                     singleLine = true
                 )
 
                 Button(
-                    onClick = viewModel::unirseSala,
+                    onClick = onUnirseSala,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !estado.conectando
                 ) {

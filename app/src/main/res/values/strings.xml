@@ -19,13 +19,16 @@
     <string name="etiqueta_siguiente">Siguiente</string>
     <string name="estado_listo">Listo</string>
     <string name="estado_fuera">Fuera</string>
-    <string name="accion_izquierda">Izquierda</string>
-    <string name="accion_derecha">Derecha</string>
-    <string name="accion_rotar">Rotar</string>
-    <string name="accion_bajar">Bajar</string>
-    <string name="accion_caida">Caida</string>
+    <string name="icono_izquierda">&#8592;</string>
+    <string name="icono_derecha">&#8594;</string>
+    <string name="icono_rotar">&#8635;</string>
+    <string name="icono_bajar">&#8595;</string>
+    <string name="icono_soltar">Soltar</string>
+    <string name="accion_soltar">Soltar</string>
     <string name="aviso_lucky_37">LUCKY 37!</string>
     <string name="texto_ganaste">Ganaste</string>
     <string name="texto_perdiste">Perdiste</string>
     <string name="resumen_partida">Puntaje: %1$d | Lineas: %2$d | Duracion: %3$ds</string>
+    <string name="texto_nueva_sala">La partida termino. Para volver a jugar debes volver a Sala y crear o unirte a una nueva sala.</string>
+    <string name="accion_volver_a_sala">Volver a sala</string>
 </resources>

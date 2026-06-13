@@ -22,8 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,27 +29,43 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tetrisduel.R
 import com.example.tetrisduel.ui.screens.components.SiguientePiezaCanvas
 import com.example.tetrisduel.ui.screens.components.TableroCanvas
+import com.example.tetrisduel.ui.states.EstadoJuego
 import com.example.tetrisduel.ui.theme.AcentoCian
 import com.example.tetrisduel.ui.theme.AcentoMagenta
 import com.example.tetrisduel.ui.theme.FondoOscuro
 import com.example.tetrisduel.ui.theme.SuperficieOscura
 import com.example.tetrisduel.ui.theme.TextoClaro
 import com.example.tetrisduel.ui.theme.TextoTenue
-import com.example.tetrisduel.ui.viewmodels.JuegoViewModel
 
 @Composable
 fun JuegoScreen(
     codigoSala: String,
-    viewModel: JuegoViewModel = hiltViewModel()
+    estado: EstadoJuego,
+    onIniciar: (String) -> Unit,
+    onMoverIzquierda: () -> Unit,
+    onRotar: () -> Unit,
+    onMoverDerecha: () -> Unit,
+    onBajar: () -> Unit,
+    onCaidaInstantanea: () -> Unit,
+    onIrAResultado: (Boolean, Int, Int, Int, String) -> Unit,
 ) {
-    val estado by viewModel.estado.collectAsState()
-
     LaunchedEffect(codigoSala) {
-        viewModel.iniciar(codigoSala)
+        onIniciar(codigoSala)
+    }
+
+    LaunchedEffect(estado.terminado) {
+        if (estado.terminado) {
+            onIrAResultado(
+                estado.gano,
+                estado.puntaje,
+                estado.lineas,
+                estado.duracionSegundos,
+                estado.mensajeFinal.orEmpty()
+            )
+        }
     }
 
     Box(
@@ -160,11 +174,11 @@ fun JuegoScreen(
             }
 
             ControlesJuego(
-                onIzquierda = viewModel::moverIzquierda,
-                onRotar = viewModel::rotar,
-                onDerecha = viewModel::moverDerecha,
-                onBajar = viewModel::bajar,
-                onCaida = viewModel::caidaInstantanea,
+                onIzquierda = onMoverIzquierda,
+                onRotar = onRotar,
+                onDerecha = onMoverDerecha,
+                onBajar = onBajar,
+                onCaida = onCaidaInstantanea,
                 habilitado = !estado.terminado
             )
         }
@@ -184,53 +198,6 @@ fun JuegoScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-            }
-        }
-
-        if (estado.terminado) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = Color(0xEE1B2236)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = if (estado.gano) {
-                            stringResource(R.string.texto_ganaste)
-                        } else {
-                            stringResource(R.string.texto_perdiste)
-                        },
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = TextoClaro
-                    )
-                    estado.mensajeFinal?.let { mensaje ->
-                        Text(
-                            text = mensaje,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextoTenue,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Text(
-                        text = stringResource(
-                            R.string.resumen_partida,
-                            estado.puntaje,
-                            estado.lineas,
-                            estado.duracionSegundos
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextoClaro,
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
         }
     }
@@ -312,21 +279,24 @@ private fun ControlesJuego(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BotonControl(
-                texto = stringResource(R.string.accion_izquierda),
+                texto = stringResource(R.string.icono_izquierda),
                 onClick = onIzquierda,
                 habilitado = habilitado,
+                esIcono = true,
                 modifier = Modifier.weight(1f)
             )
             BotonControl(
-                texto = stringResource(R.string.accion_rotar),
+                texto = stringResource(R.string.icono_rotar),
                 onClick = onRotar,
                 habilitado = habilitado,
+                esIcono = true,
                 modifier = Modifier.weight(1f)
             )
             BotonControl(
-                texto = stringResource(R.string.accion_derecha),
+                texto = stringResource(R.string.icono_derecha),
                 onClick = onDerecha,
                 habilitado = habilitado,
+                esIcono = true,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -336,13 +306,14 @@ private fun ControlesJuego(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BotonControl(
-                texto = stringResource(R.string.accion_bajar),
+                texto = stringResource(R.string.icono_bajar),
                 onClick = onBajar,
                 habilitado = habilitado,
+                esIcono = true,
                 modifier = Modifier.weight(1f)
             )
             BotonControl(
-                texto = stringResource(R.string.accion_caida),
+                texto = stringResource(R.string.icono_soltar),
                 onClick = onCaida,
                 habilitado = habilitado,
                 modifier = Modifier.weight(1f)
@@ -356,11 +327,12 @@ private fun BotonControl(
     texto: String,
     onClick: () -> Unit,
     habilitado: Boolean,
+    esIcono: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(44.dp),
         enabled = habilitado,
         colors = ButtonDefaults.buttonColors(
             containerColor = AcentoCian,
@@ -372,7 +344,12 @@ private fun BotonControl(
         Text(
             text = texto,
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            style = if (esIcono) {
+                MaterialTheme.typography.titleLarge
+            } else {
+                MaterialTheme.typography.labelLarge
+            }
         )
     }
 }
